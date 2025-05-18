@@ -1,21 +1,22 @@
 #version 330 core
 
-in vec2 texCoord;
+in vec4 fragCircleData;
+in vec3 fragCircleColor;
+uniform float radius;
 out vec4 FragColor;
-
-uniform sampler2D inTexture;
-uniform bool drawTexture;
-uniform vec4 color;
-uniform float texOffset;
 
 void main()
 {
-  if(drawTexture)
+  float dx = fragCircleData.x - fragCircleData.z;
+  float dy = fragCircleData.y - fragCircleData.w;
+  float radiusSquared = radius * radius;
+  if (dx * dx + dy * dy <= radiusSquared)
   {
-    vec2 newTexCoord = texCoord;
-    newTexCoord.x += texOffset;
-    FragColor = texture(inTexture, newTexCoord);
+    FragColor = vec4(fragCircleColor, 1.0f);
   }
   else
-    FragColor = vec4(color);
+  {
+    discard;
+  }
+
 }

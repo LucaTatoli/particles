@@ -1,0 +1,205 @@
+#include <algorithm>
+#include <cstdlib>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include <iostream>
+#include "shaders/shader.h"
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void processInput(GLFWwindow *window);
+void genQuad(float* quad, glm::vec2* positions, float raggio);
+GLFWwindow* createWindow();
+
+int viewportWidth = 600;
+int viewportHeight = 600;
+
+#define PARTICLES 200
+struct particleSystem
+{
+  glm::vec2 pos[PARTICLES];
+  glm::vec2 vel[PARTICLES];
+  glm::vec3 color[PARTICLES];
+};
+
+int main()
+{
+  GLFWwindow *window = createWindow();
+
+  Shader shader("/home/luca/Projects/game/src/shaders/glsl/vertexShader.vs", "/home/luca/Projects/game/src/shaders/glsl/fragmentShader.fs");
+  shader.use();
+
+  particleSystem particles;
+
+  float raggio = 0.02f;
+  srand(time(0));
+  for(int i = 0; i < PARTICLES; i++)
+  {
+    particles.pos[i] = glm::vec2(-1.0f + raggio + 2.0f * (float)rand()/RAND_MAX, -1.0f + raggio + 2.0f * (float)rand()/RAND_MAX);
+    particles.vel[i].x = -0.02f + 0.04f * (float)rand()/RAND_MAX;
+    particles.vel[i].y = -0.02f + 0.04f * (float)rand()/RAND_MAX;
+    particles.color[i].x = 1.0f * (float)rand()/RAND_MAX;
+    particles.color[i].y = 1.0f * (float)rand()/RAND_MAX;
+    particles.color[i].z = 1.0f * (float)rand()/RAND_MAX;
+  }
+
+  unsigned int VAO;
+  glGenVertexArrays(1, &VAO);
+  unsigned int VBOquad, VBOcenters, VBOcolors;
+  glGenBuffers(1, &VBOquad);
+  glGenBuffers(1, &VBOcenters);
+  glGenBuffers(1, &VBOcolors);
+
+  float* quad = (float*)malloc(PARTICLES*12 * sizeof(float));
+  float quadCenters[PARTICLES * 2];
+  for(int i = 0; i < PARTICLES; i++)
+  {
+    quadCenters[i*2  ] = particles.pos[i].x;
+    quadCenters[i*2+1] = particles.pos[i].y;
+  }
+
+  float quadColors[PARTICLES * 3];
+  for(int i = 0; i < PARTICLES; i++)
+  {
+    quadColors[i*3  ] = particles.color[i].x;
+    quadColors[i*3+1] = particles.color[i].y;
+    quadColors[i*3+2] = particles.color[i].z;
+  }
+
+  glBindVertexArray(VAO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBOquad);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * PARTICLES * 12, quad, GL_DYNAMIC_DRAW);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+  glEnableVertexAttribArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, VBOcenters);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * PARTICLES * 2, quadCenters, GL_STATIC_DRAW);
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+  glEnableVertexAttribArray(1);
+  glBindBuffer(GL_ARRAY_BUFFER, VBOcolors);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * PARTICLES * 3, quadColors, GL_STATIC_DRAW);
+  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+  glEnableVertexAttribArray(2);
+
+  while(!glfwWindowShouldClose(window))
+  {
+    processInput(window);
+    glfwSwapBuffers(window);
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glfwPollEvents();
+
+    // update particles
+    // for(int i = 0; i < PARTICLES; i++)
+    // {
+    //   particles.pos[i].x += particles.vel[i].x;
+    //   particles.pos[i].y += particles.vel[i].y;
+    // }
+
+    // generate the quad
+    genQuad(quad, particles.pos, raggio);
+    // buffer data to VBO
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOquad);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * PARTICLES * 12, quad, GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOcenters);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * PARTICLES * 2, quadCenters, GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOcolors);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * PARTICLES * 3, quadColors, GL_STATIC_DRAW);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(2);
+
+    // draw
+    glDrawArrays(GL_TRIANGLES, 0, PARTICLES*6);
+
+
+  }
+
+  free(quad);
+  glDeleteBuffers(1, &VBOquad);
+  glDeleteBuffers(1, &VBOcenters);
+  glDeleteBuffers(1, &VBOcolors);
+  glDeleteVertexArrays(1, &VAO);
+  glfwTerminate();
+  return 0;
+}
+
+void framebuffer_size_callback(GLFWwindow* window __attribute__((unused)), int width, int height)
+{
+  viewportWidth = width;
+  viewportHeight = height;
+  glViewport(0, 0, width, height);
+}
+
+void processInput(GLFWwindow *window)
+{
+  if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    glfwSetWindowShouldClose(window, true);
+}
+
+GLFWwindow* createWindow()
+{
+  // init GLFW library
+  glfwInit();
+  // sets various options inside GLFW
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+  // creates window
+  GLFWwindow* window = glfwCreateWindow(viewportWidth, viewportHeight, "Game", NULL, NULL);
+  if(window == NULL)
+  {
+    std::cout << "Failed to create GLFW window" << std::endl;
+    glfwTerminate();
+    exit(-1);
+  }
+  glfwMakeContextCurrent(window);
+
+  // init GLAD to manage function pointers for OpenGL
+  if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+  {
+    std::cout << "Failed to initialize GLAD" << std::endl;
+    exit(-1);
+  }
+
+  // sets viewport for OpenGL
+  glViewport(0, 0, viewportWidth, viewportHeight);
+  // sets the callback function to update OpenGL viewport when the window is resized
+  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+  return window;
+}
+
+void genQuad(float* quad, glm::vec2* positions, float raggio)
+{
+
+  for(int i = 0; i < PARTICLES; i++)
+  {
+      // top left
+      quad[i*12   ] = positions[i].x - raggio;
+      quad[i*12+ 1] = positions[i].y + raggio;
+
+      // top right
+      quad[i*12+ 2] = positions[i].x + raggio;
+      quad[i*12+ 3] = positions[i].y + raggio;
+
+      // bottom left
+      quad[i*12+ 4] = positions[i].x - raggio;
+      quad[i*12+ 5] = positions[i].y - raggio;
+
+      // top right
+      quad[i*12+ 6] = positions[i].x + raggio;
+      quad[i*12+ 7] = positions[i].y + raggio;
+
+      // bottom right
+      quad[i*12+ 8] = positions[i].x + raggio;
+      quad[i*12+ 9] = positions[i].y - raggio;
+
+      // bottom left
+      quad[i*12+10] = positions[i].x - raggio;
+      quad[i*12+11] = positions[i].y - raggio;
+  }
+
+}

@@ -12,7 +12,7 @@ BUILD_DIR = out
 GLAD_DIR = glad/src
 
 # File sorgente
-SRCS = $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/entity/*.cpp) $(wildcard $(SRC_DIR)/shaders/*.cpp) $(wildcard $(SRC_DIR)/controller/*.cpp) $(wildcard $(SRC_DIR)/sprite/*.cpp)
+SRCS = $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/entity/*.cpp) $(wildcard $(SRC_DIR)/shaders/*.cpp)
 GLAD_SRC = $(GLAD_DIR)/glad.c
 
 # File oggetto
@@ -34,8 +34,6 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@mkdir -p $(BUILD_DIR)
 	@mkdir -p $(BUILD_DIR)/entity
 	@mkdir -p $(BUILD_DIR)/shaders
-	@mkdir -p $(BUILD_DIR)/controller
-	@mkdir -p $(BUILD_DIR)/sprite
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Compilazione di glad
