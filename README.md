@@ -44,4 +44,4 @@ It focuses on learning data structures, rendering, and simulation concepts rathe
 ## Demo
 
 You can watch a short video of the simulation here:  
-[▶ Watch on Google Drive]([https://drive.google.com/file/d/ID_DEL_FILE/view](https://drive.google.com/file/d/1Ntcl1rFkwfpSFUP-1zZa2loag8tqm_Vy/view))
+[▶ Watch on Google Drive](https://drive.google.com/file/d/1Ntcl1rFkwfpSFUP-1zZa2loag8tqm_Vy/view)
