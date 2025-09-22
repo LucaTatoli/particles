@@ -43,4 +43,4 @@ It focuses on learning data structures, rendering, and simulation concepts rathe
 
 ## Demo
 
-<video src="demo/demo.mkv" controls width="600"></video>
+<video src="https://drive.google.com/file/d/1Ntcl1rFkwfpSFUP-1zZa2loag8tqm_Vy/view" controls width="600"></video>
